@@ -144,6 +144,14 @@ spec:
     size: 10Gi
 ```
 
+## User Workload Monitoring
+
+Activer la fonction **Monitoring for user-defined projects**
+
+```sh
+oc -n openshift-monitoring get configmap cluster-monitoring-config -o yaml | sed -r 's/(\senableUserWorkload:\s).*/\1true/' | oc apply -f -
+```
+
 ## Misc configuration
 
 Se connecter à **Red Hat Build of Keycloak (RHBK)** :
