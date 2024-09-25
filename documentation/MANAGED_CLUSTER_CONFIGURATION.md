@@ -146,7 +146,7 @@ spec:
 
 ## Misc configuration
 
-Se connecter à [[Red Hat Build of Keycloak (RHBK)]] :
+Se connecter à **Red Hat Build of Keycloak (RHBK)** :
 
 ```sh
 ADMIN_PASSWORD="$(oc extract -n keycloak-system secret/credential-keycloak --to=- --keys=ADMIN_PASSWORD 2>/dev/null)"
@@ -155,7 +155,7 @@ KEYCLOAK_URL="$(oc get route -n keycloak-system keycloak -o jsonpath='https://{.
 echo -e "Authenticate to $KEYCLOAK_URL\nwith:\n  username: $ADMIN_USERNAME\n  password: $ADMIN_PASSWORD"
 ```
 
-- Dans [[Red Hat Build of Keycloak (RHBK)]], realm **backstage**, aller dans **Authentication** > **Flows**, **First Broker Login**, passer **Review profile** à **off**.
+- Dans **Red Hat Build of Keycloak (RHBK)**, realm **backstage**, aller dans **Authentication** > **Flows**, **First Broker Login**, passer **Review profile** à **off**.
 - Dans l'IDP **GitLab**, ajouter le endpoint **userinfo**. L'URL du endpoint s'obtient via :
 
 ```sh

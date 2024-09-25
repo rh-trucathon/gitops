@@ -21,6 +21,97 @@ mkdir -p $HOME/tmp/summit-connect-2024/aws/.aws/
 aws configure
 ```
 
+## Déploiement d'un nouveau cluster central pour ACM
+
+Je commence par configurer le cluster central.
+
+```
+$ mkdir -p ~/tmp/summit-connect-2024/dev-clusters/central
+$ cd ~/tmp/summit-connect-2024/dev-clusters/central
+```
+
+Fichier **install-config.yaml** :
+
+```yaml
+additionalTrustBundlePolicy: Proxyonly
+apiVersion: v1
+baseDomain: sandbox2463.opentlc.com
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  platform:
+    aws:
+      type: m5a.2xlarge
+      zones:
+      - eu-west-3a
+      - eu-west-3b
+      - eu-west-3c
+  replicas: 3
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform:
+    aws:
+      rootVolume:
+        iops: 4000
+        size: 500
+        type: io1 
+      type: m5a.xlarge
+      zones:
+      - eu-west-3a
+      - eu-west-3b
+      - eu-west-3c
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: central
+networking:
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+  machineNetwork:
+  - cidr: 10.0.0.0/16
+  networkType: OVNKubernetes
+  serviceNetwork:
+  - 172.30.0.0/16
+platform:
+  aws:
+    region: eu-west-3
+publish: External
+pullSecret: 'REDACTED'
+sshKey: |
+  REDACTED
+```
+
+Lancer l'installation du cluster.
+
+```sh
+openshift-install create cluster --dir . --log-level=info
+```
+
+Résultat : 
+
+```
+INFO Credentials loaded from the "default" profile in file "/home/nmasse/.aws/credentials" 
+INFO Consuming Install Config from target directory 
+INFO Creating infrastructure resources...         
+INFO Waiting up to 20m0s (until 11:17AM CEST) for the Kubernetes API at https://api.central.sandbox2463.opentlc.com:6443... 
+INFO API v1.28.6+6216ea1 up                       
+INFO Waiting up to 30m0s (until 11:30AM CEST) for bootstrapping to complete... 
+INFO Destroying the bootstrap resources...        
+INFO Waiting up to 40m0s (until 11:56AM CEST) for the cluster at https://api.central.sandbox2463.opentlc.com:6443 to initialize... 
+INFO Waiting up to 30m0s (until 11:56AM CEST) to ensure each cluster operator has finished progressing... 
+INFO All cluster operators have completed progressing 
+INFO Checking to see if there is a route at openshift-console/console... 
+INFO Install complete!                            
+INFO To access the cluster as the system:admin user when using 'oc', run 'export KUBECONFIG=/home/nmasse/tmp/summit-connect-2024/dev-clusters/central/auth/kubeconfig' 
+INFO Access the OpenShift web-console here: https://console-openshift-console.apps.central.sandbox2463.opentlc.com 
+INFO Login to the console with user: "kubeadmin", and password: "REDACTED" 
+INFO Time elapsed: 34m40s                         
+```
+
 ## Déploiement d'un nouveau cluster pour OpenShift AI dans la région de Francfort
 
 ```
