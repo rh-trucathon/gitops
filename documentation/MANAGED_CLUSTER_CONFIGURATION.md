@@ -327,17 +327,38 @@ Format de l'URL: https://github.com/rh-trucathon/user_management/blob/main/userF
 
 Étendre la taille du PVC du PostgreSQL de Quay.
 
-## Backstage configuration
+## DevSpaces configuration
+La configuration suivante est mise en place par le playbook ansible : 
+- desactivation de l'autosync argo pour DevSpaces
+- maxNumberOfRunningWorkspacesPerUser=1
 
-Se connecter à GitLab en **root**.
+```sh
+ansible-playbook ansible/playbook-configure-devspaces.yaml
+```
 
-- Ouvrir le repository **summit-lab/backstage-workshop**
-- Éditer le fichier **showcase-templates.yaml**
-- Ajouter le code suivant dans la section **targets** :
+## GitLab configuration
+La configuration suivante est mise en place par le playbook ansible : 
+- remove branch protection
+- copie des templates github vers gitlab et modification du nom de cluster
 
-```yaml
-- https://github.com/rh-trucathon/rhdh-templates/blob/main/scaffolder-templates/fight-ui/template.yaml
-- https://github.com/rh-trucathon/rhdh-templates/blob/main/scaffolder-templates/quarkus-postgresql/template.yaml
-- https://github.com/rh-trucathon/rhdh-templates/blob/main/scaffolder-templates/quarkus-with-spring-postgresql/template.yaml
-- https://github.com/rh-trucathon/rhdh-templates/blob/main/scaffolder-templates/quarkus-ai/template.yaml
+```sh
+ansible-playbook ansible/playbook-configure-gitlab.yaml
+```
+
+## ACS configuration
+La configuration suivante est mise en place par le playbook ansible : 
+- Ajout de la policy OpenCodeQuest-CVE-2016-1000031
+
+```sh
+ansible-playbook ansible/playbook-configure-acs.yaml
+```
+
+## Backstage/RHDH configuration
+La configuration suivante est mise en place par le playbook ansible : 
+- desactivation de l'autosync argo pour backstage et backstage-gitops
+- modification du confimap app-config.yaml pour ne laisser que les templates OpenCodeQuest
+- relance de RHDH après modification du CM
+
+```sh
+ansible-playbook ansible/playbook-configure-rhdh.yaml
 ```

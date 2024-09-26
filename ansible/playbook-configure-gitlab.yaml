@@ -1,0 +1,136 @@
+- name: Configure GitLab
+  hosts: localhost
+  vars:
+    gitlab_namespace: gitlab
+    gitlab_api: https://{{ gitlab_hostname }}/api/v4
+    domain_name: "{{ gitlab_hostname | regex_replace('^[^.]+\\.', '') }}"
+    ocp_uid: "{{ domain_name.split('.')[2] }}"
+    gh_source_repo: https://github.com/rh-trucathon/rhdh-templates
+    gl_dest_repo: https://root:{{ root_token }}@{{ gitlab_hostname }}/rhdh/opencodequest-templates
+    repo_local_path: /tmp/gh
+
+  tasks:
+    - name: Get GitLab's Route
+      kubernetes.core.k8s_info:
+        api_version: route.openshift.io/v1
+        kind: Route
+        name: gitlab
+        namespace: '{{ gitlab_namespace }}'
+      register: gitlab_route
+      failed_when: gitlab_route.resources|length == 0
+      until: gitlab_route is succeeded
+      retries: 60
+      delay: 5
+
+    - set_fact:
+        gitlab_hostname: '{{ gitlab_route.resources[0].spec.host }}'
+
+    - name: Retrieve root token
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Secret
+        name: root-user-personal-token
+        namespace: '{{ gitlab_namespace }}'
+      register: r_root_token
+      failed_when: r_root_token.resources[0].data.token | length == 0
+
+    - name: Decode root token
+      set_fact:
+        root_token: '{{ r_root_token.resources[0].data.token | b64decode }}'
+
+    - name: Configure branch protection
+      ansible.builtin.uri:
+        url: '{{ gitlab_api }}/application/settings'
+        method: PUT
+        body_format: form-urlencoded
+        body:
+          default_branch_protection: 0
+        headers:
+          PRIVATE-TOKEN: '{{ root_token }}'
+        validate_certs: false
+        status_code: 200
+
+    - name: Get rhdh group
+      ansible.builtin.uri:
+        url: '{{ gitlab_api }}/groups/rhdh'
+        method: GET
+        headers:
+          PRIVATE-TOKEN: '{{ root_token }}'
+        validate_certs: false
+        status_code: 200
+      register: r_group
+
+    - name: Delete old template
+      ansible.builtin.uri:
+        url: '{{ gitlab_api }}/projects/rhdh%2Fopencodequest-templates'
+        method: DELETE
+        body_format: form-urlencoded
+        body:
+          permanently_remove: true
+        headers:
+          PRIVATE-TOKEN: '{{ root_token }}'
+        validate_certs: false
+        status_code: [ 202 , 404 ]
+
+    - name: Clone GitHub source repo
+      ansible.builtin.git:
+        repo: "{{ gh_source_repo }}"
+        dest: "{{ repo_local_path }}"
+        clone: yes
+        update: yes
+
+    - name: Modify domain_name in Location
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: 'github.com/rh-trucathon/rhdh-templates/blob/main/'
+        replace: '{{ gitlab_hostname }}/rhdh/opencodequest-templates/-/blob/master/'
+        backup: no
+      loop:
+        - "{{ repo_local_path }}/scaffolder-templates/opencodequest-templates.yaml"
+
+    - name: Modify domain_name in templates
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: 'apps.cluster-rw97m.sandbox266.opentlc.com'
+        replace: '{{ domain_name }}'
+        backup: no
+      loop:
+        - "{{ repo_local_path }}/scaffolder-templates/fight-ui/template.yaml"
+        - "{{ repo_local_path }}/scaffolder-templates/quarkus-ai/template.yaml"
+        - "{{ repo_local_path }}/scaffolder-templates/quarkus-postgresql/template.yaml"
+        - "{{ repo_local_path }}/scaffolder-templates/quarkus-with-spring-postgresql/template.yaml"
+
+    - name: Modify quay hostname
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: 'quay-.*'
+        replace: 'quay-{{ ocp_uid }}.{{ domain_name }}'
+        backup: no
+      loop:
+        - "{{ repo_local_path }}/scaffolder-templates/fight-ui/template.yaml"
+        - "{{ repo_local_path }}/scaffolder-templates/quarkus-ai/template.yaml"
+        - "{{ repo_local_path }}/scaffolder-templates/quarkus-postgresql/template.yaml"
+        - "{{ repo_local_path }}/scaffolder-templates/quarkus-with-spring-postgresql/template.yaml"
+
+    - name: git config
+      ansible.builtin.shell: |
+          rm -rf .git
+          git init --initial-branch=master
+          git config credential.helper store
+          git config user.name "Administrator"
+          git config user.email "root@opentlc.com"
+          git config user.password {{ root_token }}
+      args:
+        chdir: "{{ repo_local_path }}"
+
+    - name: git push
+      ansible.builtin.shell:
+        cmd: | 
+          git remote add origin {{ gl_dest_repo }}
+          git add .
+          git commit -m "Initial commit"
+          git push -u origin master
+          rm -rf {{ repo_local_path }}
+      args:
+        chdir: "{{ repo_local_path }}"
+

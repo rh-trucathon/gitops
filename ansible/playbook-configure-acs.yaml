@@ -1,0 +1,112 @@
+- name: Configure RHACS
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_connection: local
+    acs_api: https://{{ central_hostname }}/v1
+    validate_certs: no
+  tasks:
+  - name: Get Stackrox central's Route
+    kubernetes.core.k8s_info:
+      api_version: route.openshift.io/v1
+      kind: Route
+      name: central
+      namespace: stackrox
+    register: central_route
+    failed_when: central_route.resources|length == 0
+    until: central_route is succeeded
+    retries: 60
+    delay: 5
+
+  - set_fact:
+      central_hostname: '{{ central_route.resources[0].spec.host }}:443'
+
+  - name: Get Stackrox central's admin password
+    kubernetes.core.k8s_info:
+      api_version: v1
+      kind: Secret
+      name: acs-password
+      namespace: stackrox
+    register: admin_secret
+    failed_when: admin_secret.resources|length == 0
+    until: admin_secret is succeeded
+    retries: 60
+    delay: 5
+
+  - set_fact:
+      central_admin_password: '{{ admin_secret.resources[0].data.password | b64decode }}'
+
+  - name: Find policies
+    uri:
+      url: '{{ acs_api }}/policies?query=Policy%3AImage%20is%20not%20signed'
+      validate_certs: '{{ validate_certs }}'
+      url_username: admin
+      url_password: '{{ central_admin_password }}'
+      force_basic_auth: yes
+    register: find_policies_response
+    changed_when: false
+
+  - set_fact:
+      policy_id: '{{ (find_policies_response.json.policies | first).id }}'
+    when: find_policies_response.json.policies | count > 0
+
+  - name: Create the policy
+    uri:
+      url: '{{ acs_api }}/policies'
+      method: POST
+      status_code: "200"
+      validate_certs: '{{ validate_certs }}'
+      url_username: admin
+      url_password: '{{ central_admin_password }}'
+      body: '{{ policy }}'
+      body_format: json
+      force_basic_auth: yes
+    register: create_policy_response
+    changed_when: create_policy_response.status == 200
+    when: policy_id is not defined
+    vars:
+      policy:
+        name: OpenCodeQuest-CVE-2016-1000031
+        description: >-
+          Apache Commons FileUpload before 1.3.3 DiskFileItem File Manipulation
+          Remote Code Execution
+        rationale: ''
+        remediation: Remove when possible or update to a newer version.
+        disabled: false
+        categories:
+          - Vulnerability Management
+        lifecycleStages:
+          - BUILD
+          - DEPLOY
+        eventSource: NOT_APPLICABLE
+        exclusions: []
+        scope: []
+        severity: CRITICAL_SEVERITY
+        enforcementActions:
+          - FAIL_BUILD_ENFORCEMENT
+          - SCALE_TO_ZERO_ENFORCEMENT
+          - UNSATISFIABLE_NODE_CONSTRAINT_ENFORCEMENT
+        notifiers: []
+        SORTName: ''
+        SORTLifecycleStage: ''
+        SORTEnforcement: false
+        policyVersion: '1.1'
+        policySections:
+          - sectionName: Policy Section 1
+            policyGroups:
+              - fieldName: CVE
+                booleanOperator: OR
+                negate: false
+                values:
+                  - value: CVE-2016-1000031
+        mitreAttackVectors: []
+        criteriaLocked: false
+        mitreVectorsLocked: false
+        isDefault: false
+
+  - set_fact:
+      policy_id: '{{ create_policy_response.json.id }}'
+    when: policy_id is not defined
+
+  - debug:
+      var: policy_id

@@ -1,0 +1,90 @@
+- name: Configure RHDH
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_connection: local
+    gitlab_namespace: gitlab
+    domain_name: "{{ gitlab_hostname | regex_replace('^[^.]+\\.', '') }}"
+  tasks:
+    - name: Get GitLab's Route
+      kubernetes.core.k8s_info:
+        api_version: route.openshift.io/v1
+        kind: Route
+        name: gitlab
+        namespace: '{{ gitlab_namespace }}'
+      register: gitlab_route
+      failed_when: gitlab_route.resources|length == 0
+      until: gitlab_route is succeeded
+      retries: 60
+      delay: 5
+
+    - set_fact:
+        gitlab_hostname: '{{ gitlab_route.resources[0].spec.host }}'
+
+    - name: Disable AutoSync for backstage-gitops gitops Application
+      kubernetes.core.k8s_json_patch:
+        api_version: argoproj.io/v1alpha1
+        kind: Application
+        namespace: openshift-gitops
+        name: backstage-gitops
+        patch:
+          - op: remove
+            path: /spec/syncPolicy/automated
+      ignore_errors: yes
+
+    - name: Disable AutoSync for backstage gitops Application
+      kubernetes.core.k8s_json_patch:
+        api_version: argoproj.io/v1alpha1
+        kind: Application
+        namespace: openshift-gitops
+        name: backstage
+        patch:
+          - op: remove
+            path: /spec/syncPolicy/automated
+      ignore_errors: yes
+
+    - name: Getting RHDH ConfigMap
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: ConfigMap
+        namespace: backstage
+        name: backstage-developer-hub-app-config
+      register: configmap_data
+
+    - name: Convert the ConfigMap data from YAML to a dict
+      set_fact:
+        configmap_data_dict: "{{ configmap_data.resources[0].data['app-config.yaml'] | from_yaml }}"
+
+    - name: Define new catalog locations
+      set_fact:
+        new_catalog_locations:
+          - rules:
+            - allow:
+              - Template
+            target: http://{{ gitlab_hostname }}/rhdh/opencodequest-templates/-/blob/master/scaffolder-templates/opencodequest-templates.yaml
+            type: url
+
+    - name: Update catalog locations in the ConfigMap
+      set_fact:
+        configmap_data_dict: "{{ configmap_data_dict | combine({'catalog': {'locations': new_catalog_locations}}, recursive=True) }}"
+
+    - name: Update the ConfigMap with modified data
+      kubernetes.core.k8s:
+        definition: 
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: backstage-developer-hub-app-config
+            namespace: backstage
+          data:
+            app-config.yaml: "{{ configmap_data_dict | to_yaml }}"
+      register: update_configmap_result
+
+    - name: Force deployment of RHDH (remove pod)
+      kubernetes.core.k8s:
+        state: absent
+        api_version: v1
+        kind: Pod
+        namespace: backstage
+        label_selectors: "app.kubernetes.io/name=developer-hub"
+      when: update_configmap_result.changed

@@ -1,0 +1,29 @@
+- name: Configure DevSpaces
+  hosts: localhost
+  gather_facts: no
+  vars:
+    ansible_connection: local
+    acs_api: https://{{ central_hostname }}/v1
+    validate_certs: no
+  tasks:
+    - name: Disable AutoSync for DevSpaces gitops Application
+      kubernetes.core.k8s_json_patch:
+        api_version: argoproj.io/v1alpha1
+        kind: Application
+        namespace: openshift-gitops
+        name: devspaces
+        patch:
+          - op: remove
+            path: /spec/syncPolicy/automated
+      ignore_errors: yes
+
+    - name: Setting DevSpaces to 1 Workspace max
+      kubernetes.core.k8s_json_patch:
+        api_version: org.eclipse.che/v2
+        kind: CheCluster
+        namespace: openshift-devspaces
+        name: devspaces
+        patch:
+          - op: replace
+            path: /spec/devEnvironments/maxNumberOfRunningWorkspacesPerUser
+            value: 1
