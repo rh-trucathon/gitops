@@ -2,10 +2,10 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: importsql
-  annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": "-1"
-    "helm.sh/hook-delete-policy": before-hook-creation
+annotations:
+   argocd.argoproj.io/hook: PostSync
+   argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+   argocd.argoproj.io/sync-options: Validate=false
 immutable: false
 data:
   import.sh: |+
