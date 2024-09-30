@@ -19,9 +19,10 @@ spec:
     roles:
     - name: app_user
       ensure: present
+      inherit: true
       comment: Application user
+      connectionLimit: -1
       login: true
-      superuser: false
       passwordSecret:
         name: app-secret-prod
 
