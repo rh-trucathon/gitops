@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: import-job
+  generateName: import-job-
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
