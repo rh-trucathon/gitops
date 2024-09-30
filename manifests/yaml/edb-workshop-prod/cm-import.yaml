@@ -5,10 +5,10 @@ metadata:
 immutable: false
 data:
   import.sh: |+
-    psql postgresql://postgres:yq1GQ1nOLfPdF0CwmfhBYJwGlutaFKaQ9hxcOTjRv5pAv4E9ejaxIkN7WqjS4tw0@cluster-edb-prod-rw:5432/         -c "create database hero"
-    psql postgresql://postgres:yq1GQ1nOLfPdF0CwmfhBYJwGlutaFKaQ9hxcOTjRv5pAv4E9ejaxIkN7WqjS4tw0@cluster-edb-prod-rw:5432/hero     < /sql/heroes.sql
-    psql postgresql://postgres:yq1GQ1nOLfPdF0CwmfhBYJwGlutaFKaQ9hxcOTjRv5pAv4E9ejaxIkN7WqjS4tw0@cluster-edb-prod-rw:5432/hero     -c "grant select on hero to app_user;"
+    psql postgresql://$(POSTGRESQL_USERNAME):$(POSTGRESQL_PASSWORD)@cluster-edb-prod-rw:5432/         -c "create database hero"
+    psql postgresql://$(POSTGRESQL_USERNAME):$(POSTGRESQL_PASSWORD)@cluster-edb-prod-rw:5432/hero     < /sql/heroes.sql
+    psql postgresql://$(POSTGRESQL_USERNAME):$(POSTGRESQL_PASSWORD)@cluster-edb-prod-rw:5432/hero     -c "grant select on hero to app_user;"
 
-    psql postgresql://postgres:yq1GQ1nOLfPdF0CwmfhBYJwGlutaFKaQ9hxcOTjRv5pAv4E9ejaxIkN7WqjS4tw0@cluster-edb-prod-rw:5432/         -c "create database villain"
-    psql postgresql://postgres:yq1GQ1nOLfPdF0CwmfhBYJwGlutaFKaQ9hxcOTjRv5pAv4E9ejaxIkN7WqjS4tw0@cluster-edb-prod-rw:5432/villain  < /sql/villains.sql
-    psql postgresql://postgres:yq1GQ1nOLfPdF0CwmfhBYJwGlutaFKaQ9hxcOTjRv5pAv4E9ejaxIkN7WqjS4tw0@cluster-edb-prod-rw:5432/villain  -c "grant select on villain to app_user;"
+    psql postgresql://$(POSTGRESQL_USERNAME):$(POSTGRESQL_PASSWORD)@cluster-edb-prod-rw:5432/         -c "create database villain"
+    psql postgresql://$(POSTGRESQL_USERNAME):$(POSTGRESQL_PASSWORD)@cluster-edb-prod-rw:5432/villain  < /sql/villains.sql
+    psql postgresql://$(POSTGRESQL_USERNAME):$(POSTGRESQL_PASSWORD)@cluster-edb-prod-rw:5432/villain  -c "grant select on villain to app_user;"

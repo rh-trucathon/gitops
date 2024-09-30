@@ -26,6 +26,17 @@ spec:
           - mountPath: /sql/villains.sql
             name: villains-sql
             subPath: villains.sql
+
+          - name: POSTGRESQL_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: cluster-edb-prod-superuser
+                key: username
+          - name: POSTGRESQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: cluster-edb-prod-superuser
+                key: password
       restartPolicy: Never
       volumes:
       - name: importsql-sh
