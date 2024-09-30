@@ -38,7 +38,7 @@ data:
     SET default_table_access_method = heap;
 
     --
-    -- Name: hero; Type: TABLE; Schema: public; Owner: ${{values.deployment_name}}
+    -- Name: hero; Type: TABLE; Schema: public; Owner: app_user
     --
 
     CREATE TABLE public.hero (
@@ -51,10 +51,10 @@ data:
     );
 
 
-    ALTER TABLE public.hero OWNER TO ${{values.deployment_name}};
+    ALTER TABLE public.hero OWNER TO app_user};
 
     --
-    -- Name: hero_seq; Type: SEQUENCE; Schema: public; Owner: ${{values.deployment_name}}
+    -- Name: hero_seq; Type: SEQUENCE; Schema: public; Owner: app_user
     --
 
     CREATE SEQUENCE public.hero_seq
@@ -65,10 +65,10 @@ data:
         CACHE 1;
 
 
-    ALTER TABLE public.hero_seq OWNER TO ${{values.deployment_name}};
+    ALTER TABLE public.hero_seq OWNER TO app_user;
 
     --
-    -- Data for Name: hero; Type: TABLE DATA; Schema: public; Owner: ${{values.deployment_name}}
+    -- Data for Name: hero; Type: TABLE DATA; Schema: public; Owner: app_user
     --
 
     INSERT INTO public.hero VALUES (828, 50, 'Spider-Man', 'Miles Morales', 'https://raw.githubusercontent.com/cescoffier/quarkus-super-heroes-pictures/main/pictures/10647.jpg', 'Acrobatics, Agility, Animal Attributes, Animal Oriented Powers, Danger Sense, Gadget Usage, Jump, Reflexes, Stamina, Stealth, Substance Secretion, Surface Scaling, Thread Manipulation, Wallcrawling, Web Creation, Accelerated Healing, Acid Resistants, Camouflage, Dexterity, Electrokinesis, Endurance, Energy Blasts, Energy Manipulation, Enhanced Hearing, Enhanced Sight, Enhanced Smell, Extrasensory Perception, Heat Resistance, Indomitable Will, Instinctive Reaction, Master Martial Artist, Power Suit, Radar Sense, Toxin and Disease Resistance, Vision - Microscopic, Vision - Night, Vision - Telescopic, Weapons Master, Afterimage Creation, Audio Control, Heat Generation, Illusion Resistance, Immortality, Invisibility, Longevity, Mind Control Resistance, Precognition, Radiation Immunity, Regeneration');
@@ -574,14 +574,14 @@ data:
 
 
     --
-    -- Name: hero_seq; Type: SEQUENCE SET; Schema: public; Owner: ${{values.deployment_name}}
+    -- Name: hero_seq; Type: SEQUENCE SET; Schema: public; Owner: app_user
     --
 
     SELECT pg_catalog.setval('public.hero_seq', 25000, true);
 
 
     --
-    -- Name: hero hero_pkey; Type: CONSTRAINT; Schema: public; Owner: ${{values.deployment_name}}
+    -- Name: hero hero_pkey; Type: CONSTRAINT; Schema: public; Owner: app_user
     --
 
     ALTER TABLE ONLY public.hero
