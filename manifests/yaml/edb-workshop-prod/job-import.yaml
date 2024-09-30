@@ -19,7 +19,7 @@ spec:
         image: 'quay.io/enterprisedb/postgresql:16.4'
         volumeMounts:
           - mountPath: /scripts
-            name: importsql
+            name: importsql-sh
           - mountPath: /scripts/sql/heroes.sql
             name: heroes-sql
             subPath: heroes.sql
@@ -28,9 +28,9 @@ spec:
             subPath: villains.sql
       restartPolicy: Never
       volumes:
-      - name: importsql
+      - name: importsql-sh
         configMap:
-          name: importsql
+          name: importsql-sh
       - name: heroes-sql
         configMap:
           name: heroes-sql
