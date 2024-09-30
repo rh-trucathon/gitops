@@ -26,7 +26,7 @@ spec:
           - mountPath: /sql/villains.sql
             name: villains-sql
             subPath: villains.sql
-
+        env:
           - name: POSTGRESQL_USERNAME
             valueFrom:
               secretKeyRef:
