@@ -20,10 +20,10 @@ spec:
         volumeMounts:
           - mountPath: /scripts
             name: importsql-sh
-          - mountPath: /scripts/sql/heroes.sql
+          - mountPath: /sql/heroes.sql
             name: heroes-sql
             subPath: heroes.sql
-          - mountPath: /scripts/sql/villains.sql
+          - mountPath: /sql/villains.sql
             name: villains-sql
             subPath: villains.sql
       restartPolicy: Never
