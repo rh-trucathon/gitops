@@ -12,6 +12,7 @@ spec:
     repoURL: 'https://github.com/rh-trucathon/gitops.git'
     targetRevision: main
   syncPolicy:
+    automated: {}
     retry:
       backoff:
         duration: 10s
