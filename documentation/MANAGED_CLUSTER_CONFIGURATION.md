@@ -64,125 +64,16 @@ Run the playbook.
 ansible-playbook -i /dev/null -e @vaults/cluster-9hbm4.yaml quay-config.yaml
 ```
 
-## Installation d'Enterprise DB
+## Installation et configuration d'Enterprise DB
 
-Installation de l'opérateur.
+La configuration suivante par une OpenShift GitOps (namespace openshift-gitops): 
+- installation de l'opérateur
+- création d'un cluster de production et initialisation des bases de données de prod (hero/villain)
 
-```yaml
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: cloud-native-postgresql
-  namespace: openshift-operators
-spec:
-  channel: stable-v1.23
-  name: cloud-native-postgresql
-  source: certified-operators
-  sourceNamespace: openshift-marketplace
-```
+```sh
+oc apply -f manifests/argocd/edb.yaml
+oc apply -f manifests/argocd/edb-workshop-prod.yaml
 
-Déploiement d'un cluster de production.
-
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  annotations:
-    openshift.io/description: ""
-    openshift.io/display-name: database-prod
-  labels:
-    kubernetes.io/metadata.name: database-prod
-  name: edb-workshop-prod
-spec:
-  finalizers:
-  - kubernetes
----
-apiVersion: v1
-stringData:
-  password: DevZone2024#
-  username: app_user
-kind: Secret
-metadata:
-  name: app-secret-prod
-  namespace: edb-workshop-prod
-type: kubernetes.io/basic-auth
----
-apiVersion: v1
-stringData:
-  password: postgres
-  username: postgres
-kind: Secret
-metadata:
-  name: postgres-user
-  namespace: edb-workshop-prod
-type: kubernetes.io/basic-auth
----
-apiVersion: postgresql.k8s.enterprisedb.io/v1
-kind: Cluster
-metadata:
-  name: postgresql
-  namespace: database-prod
-spec:
-  instances: 3
-  imageName: 'quay.io/enterprisedb/postgresql:16.4'
-  primaryUpdateStrategy: unsupervised
-  enableSuperuserAccess: true
-  
-  replicationSlots:
-    highAvailability:
-      enabled: true
-
-  minSyncReplicas: 2
-  maxSyncReplicas: 2
-
-  managed:
-    roles:
-    - name: app_user
-      ensure: present
-      comment: Application user
-      login: true
-      superuser: false
-      passwordSecret:
-        name: app-secret-prod
-
-  postgresql:
-    parameters:
-      pg_stat_statements.max: "10000"
-      pg_stat_statements.track: all
-
-      max_connections: "200"
-      shared_buffers: "1GB"
-      effective_cache_size: "3GB"
-      maintenance_work_mem: "256MB"
-      checkpoint_completion_target: "0.9"
-      wal_buffers: "16MB"
-      default_statistics_target: "100"
-      random_page_cost: "1.1"
-      effective_io_concurrency: "200"
-      work_mem: "2621kB"
-      huge_pages: "off"
-      min_wal_size: "200MB"
-      max_wal_size: "400MB"
-
-    enableAlterSystem: true
-
-  storage:
-    size: 1Gi
-
-  walStorage:
-    resizeInUseVolumes: true
-    size: 500Mi
-
-  monitoring:
-    enablePodMonitor: true
-
-  resources:
-    requests:
-      memory: "4Gi"
-      cpu: "2"
-    limits:
-      memory: "4Gi"
-      cpu: "2"
 ```
 
 ## User Workload Monitoring
