@@ -92,19 +92,19 @@ metadata:
     openshift.io/display-name: database-prod
   labels:
     kubernetes.io/metadata.name: database-prod
-  name: database-prod
+  name: edb-workshop-prod
 spec:
   finalizers:
   - kubernetes
 ---
 apiVersion: v1
 stringData:
-  password: heroesandvillains
-  username: heroesandvillains
+  password: DevZone2024#
+  username: app_user
 kind: Secret
 metadata:
-  name: heroesandvillains-user
-  namespace: database-prod
+  name: app-secret-prod
+  namespace: edb-workshop-prod
 type: kubernetes.io/basic-auth
 ---
 apiVersion: v1
@@ -114,7 +114,7 @@ stringData:
 kind: Secret
 metadata:
   name: postgres-user
-  namespace: database-prod
+  namespace: edb-workshop-prod
 type: kubernetes.io/basic-auth
 ---
 apiVersion: postgresql.k8s.enterprisedb.io/v1
@@ -124,24 +124,65 @@ metadata:
   namespace: database-prod
 spec:
   instances: 3
+  imageName: 'quay.io/enterprisedb/postgresql:16.4'
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: true
+  
+  replicationSlots:
+    highAvailability:
+      enabled: true
+
+  minSyncReplicas: 2
+  maxSyncReplicas: 2
+
+  managed:
+    roles:
+    - name: app_user
+      ensure: present
+      comment: Application user
+      login: true
+      superuser: false
+      passwordSecret:
+        name: app-secret-prod
+
   postgresql:
     parameters:
-      max_worker_processes: "60"
-      password_encryption: 'scram-sha-256'
-    pg_hba:
-      - host all all all scram-sha-256
-  bootstrap:
-    initdb:
-      database: heroesandvillains
-      owner: heroesandvillains
-      secret:
-        name: heroesandvillains-user
-  enableSuperuserAccess: true
-  superuserSecret:
-    name: postgres-user
-  primaryUpdateStrategy: unsupervised
+      pg_stat_statements.max: "10000"
+      pg_stat_statements.track: all
+
+      max_connections: "200"
+      shared_buffers: "1GB"
+      effective_cache_size: "3GB"
+      maintenance_work_mem: "256MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      work_mem: "2621kB"
+      huge_pages: "off"
+      min_wal_size: "200MB"
+      max_wal_size: "400MB"
+
+    enableAlterSystem: true
+
   storage:
-    size: 10Gi
+    size: 1Gi
+
+  walStorage:
+    resizeInUseVolumes: true
+    size: 500Mi
+
+  monitoring:
+    enablePodMonitor: true
+
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
 ```
 
 ## User Workload Monitoring

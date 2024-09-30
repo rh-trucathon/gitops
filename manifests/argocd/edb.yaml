@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: edb
+  namespace: openshift-gitops
+spec:
+  destination:
+    server: 'https://kubernetes.default.svc'
+  project: default
+  source:
+    path: manifests/yaml/edb-operator
+    repoURL: 'https://github.com/rh-trucathon/gitops.git'
+    targetRevision: main
+  syncPolicy:
+    retry:
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 10m
+      limit: 15
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: import-job
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  backoffLimit: 100
+  template:
+    spec:
+      containers:
+      - name: import
+        command:
+          - /bin/bash
+          - '-c'
+          - |
+            set -x
+            sh /scripts/import.sh
+        image: 'quay.io/enterprisedb/postgresql:16.4'
+        volumeMounts:
+          - mountPath: /scripts
+            name: importsql
+      restartPolicy: Never
+      volumes:
+      - name: importsql
+        configMap:
+          name: importsql

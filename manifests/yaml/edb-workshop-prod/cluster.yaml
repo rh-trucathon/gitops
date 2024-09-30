@@ -1,0 +1,65 @@
+apiVersion: postgresql.k8s.enterprisedb.io/v1
+kind: Cluster
+metadata:
+  name: cluster-edb-prod
+spec:
+  instances: 3
+  imageName: 'quay.io/enterprisedb/postgresql:16.4'
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: true
+  
+  replicationSlots:
+    highAvailability:
+      enabled: true
+
+  minSyncReplicas: 2
+  maxSyncReplicas: 2
+
+  managed:
+    roles:
+    - name: app_user
+      ensure: present
+      comment: Application user
+      login: true
+      superuser: false
+      passwordSecret:
+        name: app-secret-prod
+
+  postgresql:
+    parameters:
+      pg_stat_statements.max: "10000"
+      pg_stat_statements.track: all
+
+      max_connections: "200"
+      shared_buffers: "1GB"
+      effective_cache_size: "3GB"
+      maintenance_work_mem: "256MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "16MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      work_mem: "2621kB"
+      huge_pages: "off"
+      min_wal_size: "200MB"
+      max_wal_size: "400MB"
+
+    enableAlterSystem: true
+
+  storage:
+    size: 1Gi
+
+  walStorage:
+    resizeInUseVolumes: true
+    size: 500Mi
+
+  monitoring:
+    enablePodMonitor: true
+
+  resources:
+    requests:
+      memory: "4Gi"
+      cpu: "2"
+    limits:
+      memory: "4Gi"
+      cpu: "2"
