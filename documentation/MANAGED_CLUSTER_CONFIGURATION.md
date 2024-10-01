@@ -31,38 +31,6 @@ oc delete ns open-cluster-management
 
 -> Via la console.
 
-## Configuration de Quay
-
-Prepare pre-requisites.
-
-```sh
-git clone https://github.com/rh-trucathon/ansible.git rh-trucathon-ansible
-cd rh-trucathon-ansible
-ansible-galaxy collection install -r collections/requirements.yml
-```
-
-Generate an admin token in Quay.
-
-1. Log in to the Quay Container Registry web UI.
-2. Use an existing organization or create a new one.
-3. In the organization, create an application.
-4. In the application, select the `Generate Token` menu.
-5. Select the permissions to associate to the token.
-   To be able to use all the modules in the collection, select `Administer Organization`, `Administer Repositories`, `Create Repositories`, `Super User Access`, and `Administer User`.
-6. Click `Generate Token`.
-
-Create a vault and store the `quay_host` and `quay_token`.
-
-```sh
-export ANSIBLE_VAULT_IDENTITY_LIST="itix@~/local/bin/ansible-vault-password"
-ansible-vault create vaults/cluster-9hbm4.yaml
-```
-
-Run the playbook.
-
-```sh
-ansible-playbook -i /dev/null -e @vaults/cluster-9hbm4.yaml quay-config.yaml
-```
 
 ## Installation et configuration d'Enterprise DB
 
@@ -72,6 +40,9 @@ La configuration suivante par une OpenShift GitOps (namespace openshift-gitops):
 
 ```sh
 oc apply -f manifests/argocd/edb.yaml
+
+## Please wait ....
+
 oc apply -f manifests/argocd/edb-workshop-prod.yaml
 
 ```
@@ -170,6 +141,10 @@ Créer une application :
 ![](2024-09 GitLab Application for OpenShift OAuth.png)
 
 Noter l'**Application ID** et **Secret**.
+
+App ID : 3bf37e27e3f0ca1a4051d39675307b5701b4f37ed76efa872aaf22bc79948cf4
+Secret : ddcba78743256eff7b8d8c7b2a5435e7efd06342a916b5ff1ff30997f8aeb620
+
 
 ![](2024-09 GitLab Application for OpenShift OAuth - Saved.png)
 
