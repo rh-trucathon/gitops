@@ -61,7 +61,7 @@
           - rules:
             - allow:
               - Template
-            target: http://{{ gitlab_hostname }}/rhdh/opencodequest-templates/-/blob/master/scaffolder-templates/opencodequest-templates.yaml
+            target: https://{{ gitlab_hostname }}/rhdh/opencodequest-templates/-/blob/master/scaffolder-templates/opencodequest-templates.yaml
             type: url
 
     - name: Update catalog locations in the ConfigMap
