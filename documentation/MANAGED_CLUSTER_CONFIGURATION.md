@@ -142,10 +142,6 @@ Créer une application :
 
 Noter l'**Application ID** et **Secret**.
 
-App ID : 3bf37e27e3f0ca1a4051d39675307b5701b4f37ed76efa872aaf22bc79948cf4
-Secret : ddcba78743256eff7b8d8c7b2a5435e7efd06342a916b5ff1ff30997f8aeb620
-
-
 ![](2024-09 GitLab Application for OpenShift OAuth - Saved.png)
 
 - **Application ID**: `a4d03a473c38c611645724fc29c6335fb14f2126dfef49aa95bac9e247a7ab5b`
